@@ -1,0 +1,13 @@
+[
+    {
+        "url": "https://www.wired.com/feed/tag/ai/latest/rss", 
+        "name": "Wired AI", 
+        "category": "Artificial Intelligence"
+    },
+    {
+        "url": "https://mashable.com/feeds/rss/all", 
+        "name": "Marshable", 
+        "category": "All"
+    }
+]
+  
