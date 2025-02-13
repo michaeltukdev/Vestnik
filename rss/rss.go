@@ -2,50 +2,53 @@ package rss
 
 import (
 	"encoding/json"
+	"encoding/xml"
+	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 )
 
-// type RSS struct {
-// 	XMLName xml.Name `xml:"rss"`
-// 	Channel Channel  `xml:"channel"`
-// }
+type RSS struct {
+	XMLName xml.Name `xml:"rss"`
+	Channel Channel  `xml:"channel"`
+}
 
-// type Channel struct {
-// 	Title       string `xml:"title"`
-// 	Link        string `xml:"link"`
-// 	Description string `xml:"description"`
-// 	Items       []Item `xml:"item"`
-// }
+type Channel struct {
+	Title       string `xml:"title"`
+	Link        string `xml:"link"`
+	Description string `xml:"description"`
+	Items       []Item `xml:"item"`
+}
 
-// type Item struct {
-// 	Title       string `xml:"title"`
-// 	Link        string `xml:"link"`
-// 	Description string `xml:"description"`
-// 	PubDate     string `xml:"pubDate"`
-// }
+type Item struct {
+	Title       string `xml:"title"`
+	Link        string `xml:"link"`
+	Description string `xml:"description"`
+	PubDate     string `xml:"pubDate"`
+}
 
-// func FetchRSSFeed(url string) (*RSS, error) {
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error fetching RSS feed: %v", err)
-// 	}
-// 	defer resp.Body.Close()
+func FetchRSSFeed(url string) (*RSS, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching RSS feed: %v", err)
+	}
+	defer resp.Body.Close()
 
-// 	body, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error reading response body: %v", err)
-// 	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %v", err)
+	}
 
-// 	var rss RSS
-// 	err = xml.Unmarshal(body, &rss)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error parsing RSS feed: %v", err)
-// 	}
+	var rss RSS
+	err = xml.Unmarshal(body, &rss)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing RSS feed: %v", err)
+	}
 
-// 	return &rss, nil
-// }
+	return &rss, nil
+}
 
 type RSSFeed struct {
 	URL      string `json:"url"`

@@ -14,10 +14,13 @@ const (
 type Model struct {
 	CurrentScreen screen
 	Choices       []string
-	Cursor        int
+	ChoicesCursor int
 	width         int
 	height        int
 	Selected      map[int]struct{}
+	ItemCursor    int
+	CurrentPage   int
+	ItemsPerPage  int
 }
 
 func InitialModel() Model {
@@ -27,7 +30,9 @@ func InitialModel() Model {
 			"feeds",
 			"settings",
 		},
-		Selected: make(map[int]struct{}),
+		Selected:     make(map[int]struct{}),
+		CurrentPage:  0,
+		ItemsPerPage: 10,
 	}
 }
 
@@ -43,22 +48,31 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "left":
-			if m.Cursor > 0 {
-				m.Cursor--
-			}
 		case "right":
-			if m.Cursor < len(m.Choices)-1 {
-				m.Cursor++
+			if m.ChoicesCursor < len(m.Choices)-1 {
+				m.ChoicesCursor++
 			}
-		case "enter": // Select the current menu item
-			m.handleSelection()
-		case "esc": // Go back to the main screen
-
-		case "ctrl+c", "q": // Quit the program
+		case "left":
+			if m.ChoicesCursor > 0 {
+				m.ChoicesCursor--
+			}
+		case "up":
+			if m.ItemCursor > 0 {
+				m.ItemCursor--
+			}
+		case "down":
+			m.ItemCursor++
+		case "n":
+			m.CurrentPage++
+		case "p":
+			if m.CurrentPage > 0 {
+				m.CurrentPage--
+			}
+		case "ctrl+c", "q":
 			return m, tea.Quit
 		}
 	}
+
 	return m, nil
 }
 
@@ -74,7 +88,7 @@ func (m Model) View() string {
 }
 
 func (m *Model) handleSelection() {
-	switch m.Cursor {
+	switch m.ChoicesCursor {
 	case 0:
 		m.CurrentScreen = screenFeeds
 	case 1:
