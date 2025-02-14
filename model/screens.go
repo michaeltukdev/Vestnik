@@ -6,23 +6,14 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/michaeltukdev/Vestnik/rss"
+	"github.com/michaeltukdev/Vestnik/styles"
 )
 
-func (m Model) mainView() string {
-	switch m.CurrentScreen {
-	case screenFeeds:
-		return m.feedsView()
-	case screenSettings:
-		return m.settingsView()
-	default:
-		return "Unknown screen"
-	}
-}
+// View for 'Feeds' tab
 
 func (m Model) feedsView() string {
 	s := ""
 
-	// Fetch all feeds
 	var allItems []rss.Item
 	for _, feed := range rss.GetFeeds() {
 		data, err := rss.FetchRSSFeed(feed.URL)
@@ -32,7 +23,6 @@ func (m Model) feedsView() string {
 		allItems = append(allItems, data.Channel.Items...)
 	}
 
-	// Pagination logic
 	totalItems := len(allItems)
 	startIndex := m.CurrentPage * m.ItemsPerPage
 	endIndex := startIndex + m.ItemsPerPage
@@ -44,16 +34,9 @@ func (m Model) feedsView() string {
 		endIndex = totalItems
 	}
 
-	var descriptionStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#888888")).
-		PaddingTop(0).
-		PaddingBottom(1).
-		PaddingLeft(4)
-
-	// Display only the items for the current page
 	for i, item := range allItems[startIndex:endIndex] {
-		cursor := " "          // Default cursor (no selection)
-		if i == m.ItemCursor { // Highlight the selected item
+		cursor := " "
+		if i == m.ItemCursor {
 			cursor = ">"
 		}
 
@@ -62,35 +45,29 @@ func (m Model) feedsView() string {
 			description = description[:80]
 		}
 
-		s += fmt.Sprintf("%s %s\n %s \n", cursor, item.Title, descriptionStyle.Render(`'`+description+`'`))
+		s += fmt.Sprintf("%s %s\n %s \n", cursor, item.Title, styles.RSSDescription.Render(`'`+description+`'`))
 	}
 
-	// Add pagination controls
 	paginationControls := m.paginationControls(totalItems)
 
 	return fmt.Sprintf("%s\n\n%s\n\n%s\n", m.navigation(), s, paginationControls)
 }
 
+// View for 'Settings' tab
+
 func (m Model) settingsView() string {
 	return fmt.Sprintf("%s\n\n%s\n", m.navigation(), "Settings view")
 }
 
+// Navigation Component
+
 func (m Model) navigation() string {
-	selectedStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FFFFFF")).
-		Background(lipgloss.Color("#5B78D4")).
-		Padding(0, 1)
-
-	unselectedStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FAFAFA")).
-		Padding(0, 1)
-
 	s := ""
 	for i, choice := range m.Choices {
 		if i == m.ChoicesCursor {
-			s += selectedStyle.Render(choice)
+			s += styles.SelectedStyle.Render(choice)
 		} else {
-			s += unselectedStyle.Render(choice)
+			s += styles.UnselectedStyle.Render(choice)
 		}
 
 		if i < len(m.Choices)-1 {
@@ -98,43 +75,40 @@ func (m Model) navigation() string {
 		}
 	}
 
+	currentMode := ""
+	switch m.Mode {
+	case 0:
+		currentMode = "Navigating"
+	case 1:
+		currentMode = "Feed Selection"
+	default:
+		currentMode = "Unknown"
+	}
+
+	modeLabel := styles.SecondaryText.Render(fmt.Sprintf("Current Mode: %s", currentMode))
+	spacePadding := m.Width - lipgloss.Width(s) - lipgloss.Width(modeLabel) - 2
+	if spacePadding > 0 {
+		s += lipgloss.NewStyle().Width(spacePadding).Render(" ")
+	}
+	s += modeLabel
+
 	borderStyle := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, true, false).
 		BorderForeground(lipgloss.Color("#5B78D4")).
 		MarginTop(1).
-		Width(m.width - 1)
+		Width(m.Width - 1)
 
 	return borderStyle.Render(s)
 }
 
+// Pagination Component
+
 func (m Model) paginationControls(totalItems int) string {
-	totalPages := (totalItems + m.ItemsPerPage - 1) / m.ItemsPerPage // Calculate total pages
+	totalPages := (totalItems + m.ItemsPerPage - 1) / m.ItemsPerPage
 
-	// Create "Previous" and "Next" buttons
-	prevButton := "Previous"
-	nextButton := "Next"
+	prevButton := styles.RenderButton("Previous", m.CurrentPage > 0)
+	nextButton := styles.RenderButton("Next", (m.CurrentPage+1)*m.ItemsPerPage < totalItems)
 
-	if m.CurrentPage > 0 {
-		prevButton = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#5B78D4")).
-			Render("[Previous]")
-	} else {
-		prevButton = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#888888")).
-			Render("Previous")
-	}
-
-	if (m.CurrentPage+1)*m.ItemsPerPage < totalItems {
-		nextButton = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#5B78D4")).
-			Render("[Next]")
-	} else {
-		nextButton = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#888888")).
-			Render("Next")
-	}
-
-	// Display current page and total pages
 	pageInfo := fmt.Sprintf("Page %d of %d", m.CurrentPage+1, totalPages)
 
 	return fmt.Sprintf("%s • %s • %s", prevButton, pageInfo, nextButton)

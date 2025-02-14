@@ -5,6 +5,7 @@ import (
 )
 
 type screen int
+type mode int
 
 const (
 	screenFeeds screen = iota
@@ -15,13 +16,15 @@ type Model struct {
 	CurrentScreen screen
 	Choices       []string
 	ChoicesCursor int
-	width         int
-	height        int
+	Width         int
 	Selected      map[int]struct{}
 	ItemCursor    int
 	CurrentPage   int
 	ItemsPerPage  int
+	Mode          mode
 }
+
+// ^ Required variables
 
 func InitialModel() Model {
 	return Model{
@@ -33,6 +36,7 @@ func InitialModel() Model {
 		Selected:     make(map[int]struct{}),
 		CurrentPage:  0,
 		ItemsPerPage: 10,
+		Mode:         0,
 	}
 }
 
@@ -43,34 +47,12 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
+		m.Width = msg.Width
 
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "right":
-			if m.ChoicesCursor < len(m.Choices)-1 {
-				m.ChoicesCursor++
-			}
-		case "left":
-			if m.ChoicesCursor > 0 {
-				m.ChoicesCursor--
-			}
-		case "up":
-			if m.ItemCursor > 0 {
-				m.ItemCursor--
-			}
-		case "down":
-			m.ItemCursor++
-		case "n":
-			m.CurrentPage++
-		case "p":
-			if m.CurrentPage > 0 {
-				m.CurrentPage--
-			}
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		}
+		var cmd tea.Cmd
+		m, cmd = m.handleKeyPress(msg)
+		return m, cmd
 	}
 
 	return m, nil
