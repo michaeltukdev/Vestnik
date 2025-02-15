@@ -12,6 +12,13 @@ This was primarily built for myself but others can use, and improve it if they w
 - **Open in Browser:** Press `Enter` on a selected RSS feed item to open its link in your default browser.
 - **Keyboard Shortcuts:** Navigate using arrow keys, paginate using `n`/`p`, toggle selection mode with `tab`, and exit with `q` or `ctrl+c`.
 
+### Todo List
+
+All of the items in the list can be added by anywhere, feel free to contribute;
+ - Better filtering and searching for the RSS feed (filtering would be through the category system already implemented)
+ - A way to modify keybinds within the settings tab (probably written to the json file)
+ - A way to manage feeds through the settings tab
+
 ### Keyboard Controls
 
 In a future update, these will all be customisable but still the defaults.
