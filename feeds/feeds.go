@@ -1,4 +1,4 @@
-package rss
+package feeds
 
 import (
 	"encoding/json"
@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
+	"time"
 )
 
 type RSS struct {
@@ -27,6 +29,15 @@ type Item struct {
 	Link        string `xml:"link"`
 	Description string `xml:"description"`
 	PubDate     string `xml:"pubDate"`
+	ParsedDate  time.Time
+	Source      string
+	Category    string
+}
+
+type RSSFeed struct {
+	URL      string `json:"url"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
 }
 
 func FetchRSSFeed(url string) (*RSS, error) {
@@ -47,13 +58,19 @@ func FetchRSSFeed(url string) (*RSS, error) {
 		return nil, fmt.Errorf("error parsing RSS feed: %v", err)
 	}
 
-	return &rss, nil
-}
+	for i, item := range rss.Channel.Items {
+		parsedDate, err := time.Parse(time.RFC1123Z, item.PubDate)
+		if err != nil {
+			parsedDate, err = time.Parse(time.RFC1123, item.PubDate)
+			if err != nil {
+				log.Printf("Failed to parse date for item '%s': %v", item.Title, err)
+				continue
+			}
+		}
+		rss.Channel.Items[i].ParsedDate = parsedDate
+	}
 
-type RSSFeed struct {
-	URL      string `json:"url"`
-	Name     string `json:"name"`
-	Category string `json:"category"`
+	return &rss, nil
 }
 
 func GetFeeds() []*RSSFeed {
@@ -74,4 +91,28 @@ func GetFeeds() []*RSSFeed {
 	}
 
 	return feeds
+}
+
+func FetchAndCombineFeeds() ([]Item, error) {
+	feeds := GetFeeds()
+	var allItems []Item
+
+	for _, feed := range feeds {
+		rssData, err := FetchRSSFeed(feed.URL)
+		if err != nil {
+			log.Printf("Error fetching feed '%s': %v", feed.Name, err)
+			continue
+		}
+		for _, item := range rssData.Channel.Items {
+			item.Source = feed.Name
+			item.Category = feed.Category
+			allItems = append(allItems, item)
+		}
+	}
+
+	sort.Slice(allItems, func(i, j int) bool {
+		return allItems[i].ParsedDate.After(allItems[j].ParsedDate)
+	})
+
+	return allItems, nil
 }
