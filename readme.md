@@ -1,6 +1,8 @@
+![Preview Image](preview.png)
+
 # Vestnik
 
-Vestnik is a terminal-based RSS feed reader built with [Bubble Tea](https://github.com/charmbracelet/bubbletea) and [Lip Gloss](https://github.com/charmbracelet/lipgloss). View and navigate RSS feed items, paginate through results, and open articles in your default web browser—all from the command line.
+Vestnik is a terminal-based RSS feed aggregator built with [Bubble Tea](https://github.com/charmbracelet/bubbletea) and [Lip Gloss](https://github.com/charmbracelet/lipgloss). View and navigate RSS feed items, paginate through results, and open articles in your default web browser—all from the command line.
 
 This was primarily built for myself but others can use, and improve it if they wish. One of my goals for 2025 was to read more hence why this project was made, it is part of my daily reading schedule.
 
